@@ -5,11 +5,18 @@
   </head>
 
   <body>
-    <form>
+    <form method="post" action='/check_pep8'>
       Code:<br>
       <input type="text" name="code" value=""><br>
       <input type="submit" value="Submit">
     </form>
+
+    Code: {{ code }}
+
+    {% for res in results %}
+    <div><p>{{ res.code }} {{ res.line }} {{ res.col }} {{ res.text }}</p></div>
+    {% endfor %}
+
   </body>
 
 </html>
