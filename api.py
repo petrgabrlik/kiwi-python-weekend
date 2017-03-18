@@ -29,26 +29,27 @@ def index():
 def check():
     if request.method == 'POST':
         code = request.form.get('code', '')
+        warnings = request.form.get('warnings', '')
         # print(myapp.check_pep8(code))
-        results = myapp.check_pep8(code)
+        results = myapp.check_pep8(code, warnings)
 
         # REDIS
-        # redis_data = redis.get(code)
+        redis_data = redis.get(code)
         # print(redis_data)
-        # if redis_data:
-        #     # from redis
-        #     print('from redis')
-        #     results = json.loads(redis_data.decode('utf-8'))
-        # else:
-        #     # from app
-        #     print('from app')
-        #     results = myapp.check_pep8(code)
-        #     redis.set(code, json.dumps(results))
+        if redis_data:
+            # from redis
+            print('from redis')
+            results = json.loads(redis_data.decode('utf-8'))
+        else:
+            # from app
+            print('from app')
+            results = myapp.check_pep8(code, warnings)
+            redis.set(code, json.dumps(results))
 
         # JSON OUT
         # results = json.dumps(results)
 
-        print(results)
+        # print(results)
 
         return render_template('index.html', title='Results', results=results, code=code)
 
@@ -57,4 +58,4 @@ def check():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
