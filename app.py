@@ -8,9 +8,10 @@ import lxml
 from grab import Grab
 import sys
 
-def ver_pep8(code):
+
+def check_pep8(code):
     '''
-    Verify pep8
+    Check pep8
     '''
     g = Grab()
     results = []
@@ -26,9 +27,10 @@ def ver_pep8(code):
 
     return results
 
+
 def main(code):
 
-    results = ver_pep8(code)
+    results = check_pep8(code)
 
     print('Code\tLine\tColumn\tText')
     for result in results:
