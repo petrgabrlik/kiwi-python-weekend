@@ -27,27 +27,47 @@ def print_attacker():
     print('>', request.remote_addr, int(redis.get('p'+request.remote_addr)), request.headers.get('User-Agent'), sep='  ')
 
 
+def check_ip(ip):
+    '''
+    '''
+    if redis.exists('p'+ip):
+        redis.incrby('p'+ip,1)
+        redis.expire('p'+ip,10)
+    else:
+        redis.setex('p'+ip, 10, 1)
+
+    if int(redis.get('p'+request.remote_addr)) < 10:
+        return 1
+    else:
+        return 0
+
+
 @app.route('/')
 def index():
     '''
     '''
     # redis.delete('p'+request.remote_addr)
-    # print(time.localtime)
-    redis_data = redis.get('p'+request.remote_addr)
-    if redis_data:
-        count = int(redis_data)
-        count += 1
-        redis.set('p'+request.remote_addr, count)
-    else:
-        count = 1
-        redis.set('p'+request.remote_addr, count)
 
-    print_attacker()
 
-    if count < 10:
+    # if redis.exists('p'+request.remote_addr):
+    #     # count = int(redis.get('p'+request.remote_addr))
+    #     # count += 1
+    #     # redis.set('p'+request.remote_addr, count)
+    #     redis.incrby('p'+request.remote_addr,1)
+    #     redis.expire('p'+request.remote_addr,10)
+    # else:
+    #     # count = 1
+    #     # redis.set('p'+request.remote_addr, 1)
+    #     # redis.expire('p'+request.remote_addr,10)
+    #     redis.setex('p'+request.remote_addr, 10, 1)
+
+    # print_attacker()
+
+    # if int(redis.get('p'+request.remote_addr)) < 10:
+    if check_ip(request.remote_addr):
         return render_template('index.html', title='Home')
     else:
-        return render_template('sorry.html', title='sorryjako')
+        return render_template('sorry.html', title='sorryjako'), 400
 
 
 @app.route('/check_pep8', methods=['POST', 'GET'])
@@ -55,7 +75,7 @@ def check():
     '''
     '''
     if request.method == 'POST':
-        print_attacker()
+        # print_attacker()
         code = request.form.get('code', '')
         warnings = request.form.get('warnings', '')
         # print(myapp.check_pep8(code))
@@ -78,11 +98,17 @@ def check():
         # results = json.dumps(results)
 
         # print(results)
-        return render_template('index.html', title='Results', results=results, code=code)
+        if check_ip(request.remote_addr):
+            return render_template('index.html', title='Results', results=results, code=code)
+        else:
+            return render_template('sorry.html', title='sorryjako'), 400
 
     elif request.method == 'GET':
-        print_attacker()
-        return render_template('index.html', title='Home')
+        # print_attacker()
+        if check_ip(request.remote_addr):
+            return render_template('index.html', title='Home')
+        else:
+            return render_template('sorry.html', title='sorryjako'), 400
 
 
 if __name__ == '__main__':

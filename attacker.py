@@ -20,6 +20,7 @@ def main():
     results = []
     for i in range(1):
         g.go('http://127.0.0.1:5000/', method='GET')
+        print(g.doc.code)
         # g.go('http://127.0.0.1:5000/check_pep8', method='POST', post={'code':code})
     # print(g.doc.body)
 
