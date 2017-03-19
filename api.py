@@ -45,6 +45,21 @@ def check_ip(ip):
         return 0
 
 
+def get_results(code, warnings):
+    '''
+    '''
+    # Redis buffering
+    if redis.exists(code):
+        # print('from redis')
+        results = json.loads(redis.get(code).decode('utf-8'))
+    else:
+        # print('from app')
+        results = myapp.check_pep8(code, warnings)
+        redis.set(code, json.dumps(results))
+
+    return results
+
+
 @app.route('/')
 def index():
     '''
@@ -70,21 +85,7 @@ def check():
 
             code = request.form.get('code', '')
             warnings = request.form.get('warnings', '')
-
-            # Redis buffering
-            # redis_data = redis.get(code)
-            # print(redis_data)
-            # if redis_data:
-            if redis.exists(code):
-                # from redis
-                print('from redis')
-                # results = json.loads(redis_data.decode('utf-8'))
-                results = json.loads(redis.get(code).decode('utf-8'))
-            else:
-                # from app
-                print('from app')
-                results = myapp.check_pep8(code, warnings)
-                redis.set(code, json.dumps(results))
+            results = get_results(code, warnings)
 
             # JSON OUT
             # results = json.dumps(results)
