@@ -29,7 +29,10 @@ def print_attacker():
 
 def check_ip(ip):
     '''
+    Check if the IP address is not banned
     '''
+    # redis.delete('p'+request.remote_addr)
+
     if redis.exists('p'+ip):
         redis.incrby('p'+ip,1)
         redis.expire('p'+ip,10)
@@ -46,27 +49,11 @@ def check_ip(ip):
 def index():
     '''
     '''
-    # redis.delete('p'+request.remote_addr)
-
-
-    # if redis.exists('p'+request.remote_addr):
-    #     # count = int(redis.get('p'+request.remote_addr))
-    #     # count += 1
-    #     # redis.set('p'+request.remote_addr, count)
-    #     redis.incrby('p'+request.remote_addr,1)
-    #     redis.expire('p'+request.remote_addr,10)
-    # else:
-    #     # count = 1
-    #     # redis.set('p'+request.remote_addr, 1)
-    #     # redis.expire('p'+request.remote_addr,10)
-    #     redis.setex('p'+request.remote_addr, 10, 1)
-
-    # print_attacker()
-
-    # if int(redis.get('p'+request.remote_addr)) < 10:
     if check_ip(request.remote_addr):
+        print_attacker()
         return render_template('index.html', title='Home')
     else:
+        print_attacker()
         return render_template('sorry.html', title='sorryjako'), 400
 
 
@@ -75,39 +62,45 @@ def check():
     '''
     '''
     if request.method == 'POST':
-        # print_attacker()
-        code = request.form.get('code', '')
-        warnings = request.form.get('warnings', '')
-        # print(myapp.check_pep8(code))
-        results = myapp.check_pep8(code, warnings)
 
-        # REDIS
-        redis_data = redis.get(code)
-        # print(redis_data)
-        if redis_data:
-            # from redis
-            print('from redis')
-            results = json.loads(redis_data.decode('utf-8'))
-        else:
-            # from app
-            print('from app')
-            results = myapp.check_pep8(code, warnings)
-            redis.set(code, json.dumps(results))
+        is_human = request.form.get('human', '')
 
-        # JSON OUT
-        # results = json.dumps(results)
+        if check_ip(request.remote_addr) and is_human:
+            print_attacker()
 
-        # print(results)
-        if check_ip(request.remote_addr):
+            code = request.form.get('code', '')
+            warnings = request.form.get('warnings', '')
+
+            # Redis buffering
+            # redis_data = redis.get(code)
+            # print(redis_data)
+            # if redis_data:
+            if redis.exists(code):
+                # from redis
+                print('from redis')
+                # results = json.loads(redis_data.decode('utf-8'))
+                results = json.loads(redis.get(code).decode('utf-8'))
+            else:
+                # from app
+                print('from app')
+                results = myapp.check_pep8(code, warnings)
+                redis.set(code, json.dumps(results))
+
+            # JSON OUT
+            # results = json.dumps(results)
+
             return render_template('index.html', title='Results', results=results, code=code)
         else:
+            print_attacker()
             return render_template('sorry.html', title='sorryjako'), 400
 
     elif request.method == 'GET':
         # print_attacker()
         if check_ip(request.remote_addr):
+            print_attacker()
             return render_template('index.html', title='Home')
         else:
+            print_attacker()
             return render_template('sorry.html', title='sorryjako'), 400
 
 
