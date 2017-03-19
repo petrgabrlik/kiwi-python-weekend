@@ -7,7 +7,7 @@ from flask import Flask, render_template, request
 import json
 from redis import StrictRedis
 import app as myapp
-
+import time
 
 app = Flask(__name__)
 
@@ -20,14 +20,42 @@ redis_config = {
 redis = StrictRedis(**redis_config)
 
 
+def print_attacker():
+    '''
+    '''
+    # print(request.headers)
+    print('>', request.remote_addr, int(redis.get('p'+request.remote_addr)), request.headers.get('User-Agent'), sep='  ')
+
+
 @app.route('/')
 def index():
-    return render_template('index.html', title='Home')
+    '''
+    '''
+    # redis.delete('p'+request.remote_addr)
+    # print(time.localtime)
+    redis_data = redis.get('p'+request.remote_addr)
+    if redis_data:
+        count = int(redis_data)
+        count += 1
+        redis.set('p'+request.remote_addr, count)
+    else:
+        count = 1
+        redis.set('p'+request.remote_addr, count)
+
+    print_attacker()
+
+    if count < 10:
+        return render_template('index.html', title='Home')
+    else:
+        return render_template('sorry.html', title='sorryjako')
 
 
 @app.route('/check_pep8', methods=['POST', 'GET'])
 def check():
+    '''
+    '''
     if request.method == 'POST':
+        print_attacker()
         code = request.form.get('code', '')
         warnings = request.form.get('warnings', '')
         # print(myapp.check_pep8(code))
@@ -50,10 +78,10 @@ def check():
         # results = json.dumps(results)
 
         # print(results)
-
         return render_template('index.html', title='Results', results=results, code=code)
 
     elif request.method == 'GET':
+        print_attacker()
         return render_template('index.html', title='Home')
 
 
